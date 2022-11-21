@@ -1,5 +1,8 @@
 package com.androideradev.www.moviespots.network;
 
+import com.androideradev.www.moviespots.LiveDataCallAdapter;
+import com.androideradev.www.moviespots.LiveDataCallAdapterFactory;
+
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
@@ -17,6 +20,7 @@ public class MoviesApiService {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(NetworkUtilities.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
+                .addCallAdapterFactory(new LiveDataCallAdapterFactory())
                 .client(new OkHttpClient.Builder()
                         .addInterceptor(loggingInterceptor)
                         .build())

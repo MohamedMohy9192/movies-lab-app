@@ -18,8 +18,8 @@ public class ApiResponse<T> {
     public static <T> ApiErrorResponse<T> create(Throwable error) {
         // If there is error return the error message
         // If there is an error and no message available return "unknown error" message
-        return new ApiErrorResponse<T>(
-                error.getMessage() != null ?
+        return new ApiErrorResponse<>(
+                error.getMessage() != null || error.getMessage().isEmpty() ?
                         error.getMessage() :
                         "Unknown error");
     }

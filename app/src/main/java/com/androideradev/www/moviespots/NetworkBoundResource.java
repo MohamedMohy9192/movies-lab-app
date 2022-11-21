@@ -18,7 +18,7 @@ public abstract class NetworkBoundResource<ResultType, RequestType> {
     // results represent the data that are going to serve the UI and are going to be observed from UI
     private final MediatorLiveData<Resource<ResultType>> result = new MediatorLiveData<>();
 
-    protected NetworkBoundResource(AppExecutors appExecutors) {
+    public NetworkBoundResource(AppExecutors appExecutors) {
         mAppExecutors = appExecutors;
         // Send loading state to UI
         result.setValue(Resource.loading(null));
