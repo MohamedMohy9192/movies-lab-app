@@ -16,12 +16,15 @@ public interface MovieDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     long insertMovie(DatabaseMovie movie);
 
-    @Query("SELECT * FROM movies WHERE title LIKE :query AND release_date = strftime('%Y', :year)")
-    LiveData<DatabaseMovie> searchMovies(String query, String year);
+    @Query("SELECT * FROM movies WHERE title LIKE '%' || :query || '%' AND release_date LIKE '%' || :year || '%'")
+    LiveData<List<DatabaseMovie>> searchMoviesWithYear(String query, String year);
+
+    @Query("SELECT * FROM movies WHERE title LIKE '%' || :query || '%'")
+    LiveData<List<DatabaseMovie>> searchMovies(String query);
 
     @Query("SELECT * FROM movies WHERE id = :id")
     LiveData<DatabaseMovie> getMovie(int id);
 
     @Query("SELECT * FROM movies")
-    LiveData<DatabaseMovie> getAllMovies();
+    LiveData<List<DatabaseMovie>> getAllMovies();
 }
