@@ -1,4 +1,4 @@
-package com.androideradev.www.moviespots;
+package com.androideradev.www.moviespots.util;
 
 import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;

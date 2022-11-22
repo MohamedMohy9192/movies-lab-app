@@ -10,8 +10,8 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.SmallTest;
 
-import com.androideradev.www.moviespots.LiveDataTestUtil;
 import com.androideradev.www.moviespots.TestData;
+import com.androideradev.www.util.LiveDataTestUtil;
 
 import org.junit.After;
 import org.junit.Before;
