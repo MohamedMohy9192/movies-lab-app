@@ -15,7 +15,8 @@ public interface MoviesApi {
     LiveData<ApiResponse<NetworkMovieContainer>> searchMovie(
             @Query("api_key") String key,
             @Query("query") String query,
-            @Query("page") int page/*,
+            @Query("page") int page,
+            @Query("language") String language/*,
             @Query("include_adult") boolean includeAdult,
             @Query("region") String region,
             @Query("primary_release_year") String year*/);
