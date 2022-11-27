@@ -7,8 +7,10 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
+import com.androideradev.www.moviespots.MovieSearchResult;
+
 @TypeConverters({GenreIdConverter.class})
-@Database(entities = {DatabaseMovie.class}, version = 1, exportSchema = false)
+@Database(entities = {DatabaseMovie.class, MovieSearchResult.class}, version = 1, exportSchema = false)
 public abstract class MoviesDatabase extends RoomDatabase {
 
     private static volatile MoviesDatabase sInstance;
