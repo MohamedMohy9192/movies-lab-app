@@ -28,5 +28,15 @@ public interface MoviesApi {
             @Query("api_key") String key,
             @Query("language") String language
     );
+
+    @GET("search/movie")
+    Call<NetworkMovieContainer> searchNextPageMovie(
+            @Query("api_key") String key,
+            @Query("query") String query,
+            @Query("page") int page,
+            @Query("language") String language/*,
+            @Query("include_adult") boolean includeAdult,
+            @Query("region") String region,
+            @Query("primary_release_year") String year*/);
 }
 
