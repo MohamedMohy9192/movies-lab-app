@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.androideradev.www.moviespots.Movie;
 import com.androideradev.www.moviespots.databinding.PopularMoviesItemBinding;
+import com.bumptech.glide.Glide;
 
 class PopularMoviesAdapter extends ListAdapter<Movie, PopularMoviesAdapter.PopularMoviesViewHolder> {
 
@@ -31,19 +32,20 @@ class PopularMoviesAdapter extends ListAdapter<Movie, PopularMoviesAdapter.Popul
 
     @Override
     public void onBindViewHolder(@NonNull PopularMoviesViewHolder holder, int position) {
-
+        Movie movie = getItem(position);
+        holder.bind(movie);
     }
 
     public static final DiffUtil.ItemCallback<Movie> DIFF_CALLBACK =
-            new DiffUtil.ItemCallback<Movie>() {
+            new DiffUtil.ItemCallback<>() {
                 @Override
                 public boolean areItemsTheSame(@NonNull Movie oldItem, @NonNull Movie newItem) {
-                    return false;
+                    return oldItem.getId() == newItem.getId();
                 }
 
                 @Override
                 public boolean areContentsTheSame(@NonNull Movie oldItem, @NonNull Movie newItem) {
-                    return false;
+                    return oldItem.equals(newItem);
                 }
             };
 
@@ -53,6 +55,15 @@ class PopularMoviesAdapter extends ListAdapter<Movie, PopularMoviesAdapter.Popul
         public PopularMoviesViewHolder(PopularMoviesItemBinding binding) {
             super(binding.getRoot());
             mBinding = binding;
+        }
+
+        public void bind(Movie movie) {
+            mBinding.setMovie(movie);
+            mBinding.executePendingBindings();
+
+            mBinding.ratingBar.setRating((float) (movie.getVoteAverage() != 0 ? (movie.getVoteAverage() / 2) : 0));
+            mBinding.titleTextView.setText(movie.getTitle());
+            mBinding.dateTextView.setText(movie.getReleaseDate());
         }
     }
 }

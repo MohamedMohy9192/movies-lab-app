@@ -6,6 +6,8 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
+import com.androideradev.www.moviespots.MovieSearchResult;
+
 import java.util.List;
 
 @Dao
@@ -27,4 +29,16 @@ public interface MovieDao {
 
     @Query("SELECT * FROM movies")
     LiveData<List<DatabaseMovie>> getAllMovies();
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    long insertSearchMovieResult(MovieSearchResult result);
+
+    @Query("SELECT * FROM movie_search_result WHERE query_text = :query")
+    LiveData<MovieSearchResult> search(String query);
+
+    @Query("SELECT * FROM movies WHERE id in (:repoIds)")
+    LiveData<List<DatabaseMovie>> loadMoviesById(List<Integer> repoIds);
+
+    @Query("SELECT * FROM movie_search_result WHERE query_text = :query")
+    MovieSearchResult findSearchResult(String query);
 }

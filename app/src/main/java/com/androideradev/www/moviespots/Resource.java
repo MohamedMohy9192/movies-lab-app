@@ -5,6 +5,7 @@ import androidx.annotation.Nullable;
 
 /**
  * A generic class that contains data and status about this data.
+ *
  * @param <T>
  */
 public class Resource<T> {
@@ -50,5 +51,5 @@ public class Resource<T> {
      * These are usually created by the Repository classes where they return
      * `LiveData<Resource<T>>` to pass back the latest data to the UI with its fetch status.
      */
-    private enum Status {SUCCESS, ERROR, LOADING}
+    public enum Status {SUCCESS, ERROR, LOADING}
 }
