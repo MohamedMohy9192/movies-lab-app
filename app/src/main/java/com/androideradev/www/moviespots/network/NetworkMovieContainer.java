@@ -18,6 +18,13 @@ public class NetworkMovieContainer {
     @SerializedName("total_results")
     private int totalResults;
 
+    public Integer getNextPage() {
+        if (page < totalPages) {
+            return page + 1;
+        }
+        return null;
+    }
+
     public void setPage(int page) {
         this.page = page;
     }
@@ -49,4 +56,6 @@ public class NetworkMovieContainer {
     public int getTotalResults() {
         return totalResults;
     }
+
+
 }
