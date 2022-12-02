@@ -55,7 +55,7 @@ public class MovieRepository {
         return fetchNextSearchPageTask.getLiveData();
     }
 
-    public LiveData<Resource<List<DatabaseMovie>>> searchMovies(String query) {
+    private LiveData<Resource<List<DatabaseMovie>>> searchMovies(String query) {
         return new NetworkBoundResource<List<DatabaseMovie>, NetworkMovieContainer>(mAppExecutors) {
             @Override
             protected void saveCallResult(@NonNull NetworkMovieContainer item) {
@@ -86,7 +86,7 @@ public class MovieRepository {
                     Log.d("FACE", "loadFromDb: " + String.valueOf(movies));
                     if (movies != null) {
                         for (DatabaseMovie movie : movies) {
-                            //  Log.d("FetchNextSearchPageTask", "loadFromDb: " + movie.getId());
+                              Log.d("FetchNextSearchPageTask", "loadFromDb: " + movie.getId());
                         }
                     }
                 });
@@ -102,7 +102,7 @@ public class MovieRepository {
         }.getAsLiveData();
     }
 
-    /*public LiveData<Resource<List<Movie>>> search(String query) {
+    public LiveData<Resource<List<Movie>>> search(String query) {
         LiveData<Resource<List<DatabaseMovie>>> resourceLiveData = searchMovies(query);
         return Transformations.map(resourceLiveData, resourceDatabaseMovies -> {
             if (resourceDatabaseMovies.data != null) {
@@ -114,5 +114,5 @@ public class MovieRepository {
 
             return new Resource<>(resourceDatabaseMovies.status, null, resourceDatabaseMovies.message);
         });
-    }*/
+    }
 }

@@ -2,40 +2,30 @@ package com.androideradev.www.moviespots.popular;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.os.IBinder;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
-
-import com.androideradev.www.moviespots.AppExecutors;
 import com.androideradev.www.moviespots.ConnectivityStatus;
-import com.androideradev.www.moviespots.MovieMapper;
-import com.androideradev.www.moviespots.MovieRepository;
 import com.androideradev.www.moviespots.R;
 import com.androideradev.www.moviespots.ServiceLocator;
 import com.androideradev.www.moviespots.ViewModelFactory;
-import com.androideradev.www.moviespots.data.DatabaseMovie;
-import com.androideradev.www.moviespots.data.MovieLocaleDataSourceImpl;
-import com.androideradev.www.moviespots.data.MoviesDatabase;
 import com.androideradev.www.moviespots.databinding.FragmentPopularMoviesBinding;
-import com.androideradev.www.moviespots.network.MovieRemoteDataSourceImpl;
-import com.androideradev.www.moviespots.network.MoviesApiService;
 import com.google.android.material.snackbar.Snackbar;
-
-import java.util.Objects;
 
 public class PopularMoviesFragment extends Fragment {
 
@@ -44,8 +34,7 @@ public class PopularMoviesFragment extends Fragment {
     private FragmentPopularMoviesBinding mBinding;
 
     private PopularMoviesAdapter mPopularMoviesAdapter;
-
-    private boolean isConnected;
+    private PopularMoviesViewModel mPopularMoviesViewModel;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
@@ -60,24 +49,14 @@ public class PopularMoviesFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
 
-        ViewModelFactory viewModelFactory = new ViewModelFactory(ServiceLocator.provideMovieRepository(requireContext()));
+        ViewModelFactory viewModelFactory =
+                new ViewModelFactory(ServiceLocator.provideMovieRepository(requireContext()));
 
-        final PopularMoviesViewModel popularMoviesViewModel =
+        mPopularMoviesViewModel =
                 new ViewModelProvider(this, viewModelFactory).get(PopularMoviesViewModel.class);
 
 
-        ConnectivityStatus.getConnectivityStatus(requireContext()).getNetworkStatus().observe(getViewLifecycleOwner(), networkStatus -> {
-            switch (networkStatus) {
-                case AVAILABLE:
-                    isConnected = true;
-                    Snackbar.make(requireView(), networkStatus.getMessage(), Snackbar.LENGTH_LONG).show();
-                    break;
-                case LOST:
-                    isConnected = false;
-                    Snackbar.make(requireView(), networkStatus.getMessage(), Snackbar.LENGTH_LONG).show();
-                    break;
-            }
-        });
+        mBinding.setLifecycleOwner(getViewLifecycleOwner());
 
         RecyclerView recyclerView = mBinding.moviesRecyclerView;
         mPopularMoviesAdapter = new PopularMoviesAdapter();
@@ -93,34 +72,33 @@ public class PopularMoviesFragment extends Fragment {
                     lastPosition = layoutManager.findLastVisibleItemPosition();
                 }
                 if (lastPosition == mPopularMoviesAdapter.getItemCount() - 1) {
-                    popularMoviesViewModel.loadNextPage();
+                    mPopularMoviesViewModel.loadNextPage();
                 }
             }
         });
 
-        popularMoviesViewModel.getResults().observe(getViewLifecycleOwner(), listResource -> {
+        mBinding.setQuery(mPopularMoviesViewModel.getQuery());
+        mBinding.setSearchResult(mPopularMoviesViewModel.getResults());
+        mPopularMoviesViewModel.getResults().observe(getViewLifecycleOwner(), listResource -> {
             Log.d(TAG, "getResults: " + listResource);
             Log.d(TAG, "getResults:  get notified");
             if (listResource != null) {
                 Log.d(TAG, "Status: " + listResource.status);
                 Log.d(TAG, "Message: " + listResource.message);
 
-                if (listResource.data != null) {
-                    mPopularMoviesAdapter.submitList(MovieMapper.toMovies(listResource.data));
-                    for (DatabaseMovie movie : listResource.data) {
-                        Log.d(TAG, "Data: " + movie.getTitle());
-                    }
-                }
+
+                    mPopularMoviesAdapter.submitList(listResource.data);
+
             } else {
                 mPopularMoviesAdapter.submitList(null);
             }
         });
 
-        popularMoviesViewModel.getLoadMoreStateLiveData().observe(getViewLifecycleOwner(), loadMoreState -> {
+        mPopularMoviesViewModel.getLoadMoreStateLiveData().observe(getViewLifecycleOwner(), loadMoreState -> {
             if (loadMoreState == null) {
-
+                mBinding.setLoadingMore(false);
             } else {
-
+                mBinding.setLoadingMore(loadMoreState.isRunning());
                 Log.d(TAG, "getLoadMoreStateLiveData: " + loadMoreState.isRunning());
                 String error = loadMoreState.getErrorMessageIfNotHandled();
                 if (error != null) {
@@ -128,15 +106,46 @@ public class PopularMoviesFragment extends Fragment {
                 }
             }
         });
+        initConnectivityStatus();
+        initSearchInputListener();
+    }
 
-
-        mBinding.button.setOnClickListener(v -> {
-            Log.d(TAG, "Button Clicked");
-            String q = mBinding.searchMovieEditText.getText().toString();
-            dismissKeyboard(v.getWindowToken());
-
-            popularMoviesViewModel.setQuery(q, isConnected);
+    private void initConnectivityStatus() {
+        ConnectivityStatus.getConnectivityStatus(requireContext()).getNetworkStatus().observe(getViewLifecycleOwner(), networkStatus -> {
+            switch (networkStatus) {
+                case AVAILABLE:
+                case LOST:
+                    Snackbar.make(requireView(), networkStatus.getMessage(), Snackbar.LENGTH_LONG).show();
+                    break;
+            }
         });
+    }
+
+    private void initSearchInputListener() {
+        mBinding.input.setOnEditorActionListener((view, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                doSearch(view);
+               return true;
+            } else {
+               return false;
+            }
+        });
+        mBinding.input.setOnKeyListener((view, keyCode, event) -> {
+            if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
+                doSearch(view);
+                return true;
+            } else {
+                return false;
+            }
+        });
+    }
+
+    private void doSearch(View view) {
+        Log.d(TAG, "Button Clicked");
+        String query = mBinding.input.getText().toString();
+        // Dismiss keyboard
+        dismissKeyboard(view.getWindowToken());
+        mPopularMoviesViewModel.setQuery(query);
     }
 
     private void dismissKeyboard(IBinder windowToken) {
