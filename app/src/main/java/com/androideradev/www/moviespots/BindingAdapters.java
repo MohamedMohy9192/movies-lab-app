@@ -1,7 +1,7 @@
 package com.androideradev.www.moviespots;
 
 import android.net.Uri;
-import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
 
 import androidx.annotation.Nullable;
@@ -21,12 +21,17 @@ public class BindingAdapters {
                     .buildUpon()
                     .appendEncodedPath(posterPath)
                     .build();
-            Log.d(TAG, "bindImage: " + uri);
             Glide.with(imageView.getContext())
                     .load(uri)
                     .error(R.drawable.ic_broken_image)
                     .placeholder(R.drawable.loading_animation)
+                    .centerCrop()
                     .into(imageView);
         }
+    }
+
+    @BindingAdapter("visibleGone")
+    public static void showHide(View view, Boolean show) {
+        view.setVisibility(show ? View.VISIBLE : View.GONE);
     }
 }

@@ -25,7 +25,7 @@ public class PopularMoviesViewModel extends ViewModel {
 
     private final MutableLiveData<String> query = new MutableLiveData<>();
 
-    private final LiveData<Resource<List<DatabaseMovie>>> mResults;
+    private final LiveData<Resource<List<Movie>>> mResults;
 
     private final MovieRepository mMovieRepository;
 
@@ -44,8 +44,8 @@ public class PopularMoviesViewModel extends ViewModel {
                 Log.d(TAG, "PopularMoviesViewModel: " + search);
                 return AbsentLiveData.create();
             } else {
-                Log.d(TAG, "PopularMoviesViewModel: get notified " );
-                return mMovieRepository.searchMovies(search);
+                Log.d(TAG, "PopularMoviesViewModel: get notified ");
+                return mMovieRepository.search(search);
             }
         });
 
@@ -54,7 +54,7 @@ public class PopularMoviesViewModel extends ViewModel {
         });
     }
 
-    public LiveData<Resource<List<DatabaseMovie>>> getResults() {
+    public LiveData<Resource<List<Movie>>> getResults() {
         return mResults;
     }
 
@@ -62,7 +62,11 @@ public class PopularMoviesViewModel extends ViewModel {
         return mLoadMoreStateLiveData;
     }
 
-    public void setQuery(String originalInput, boolean isConnected) {
+    public LiveData<String> getQuery() {
+        return query;
+    }
+
+    public void setQuery(String originalInput) {
         String input = originalInput.toLowerCase(Locale.getDefault()).trim();
 
         if (input.equals(query.getValue())) {
@@ -140,7 +144,7 @@ public class PopularMoviesViewModel extends ViewModel {
             reset();
         }
 
-        public MutableLiveData<LoadMoreState> getLoadMoreState() {
+        public LiveData<LoadMoreState> getLoadMoreState() {
             return loadMoreState;
         }
 
