@@ -10,7 +10,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -87,7 +86,7 @@ public class PopularMoviesFragment extends Fragment {
                 Log.d(TAG, "Message: " + listResource.message);
 
 
-                    mPopularMoviesAdapter.submitList(listResource.data);
+                mPopularMoviesAdapter.submitList(listResource.data);
 
             } else {
                 mPopularMoviesAdapter.submitList(null);
@@ -108,15 +107,24 @@ public class PopularMoviesFragment extends Fragment {
         });
         initConnectivityStatus();
         initSearchInputListener();
+
+        mBinding.setCallback(() -> {
+            mPopularMoviesViewModel.refresh();
+        });
     }
 
     private void initConnectivityStatus() {
         ConnectivityStatus.getConnectivityStatus(requireContext()).getNetworkStatus().observe(getViewLifecycleOwner(), networkStatus -> {
             switch (networkStatus) {
                 case AVAILABLE:
+                    mPopularMoviesViewModel.refresh();
+                    Snackbar.make(requireView(), networkStatus.getMessage(), Snackbar.LENGTH_LONG).show();
+                    break;
                 case LOST:
                     Snackbar.make(requireView(), networkStatus.getMessage(), Snackbar.LENGTH_LONG).show();
                     break;
+
+
             }
         });
     }
@@ -125,9 +133,9 @@ public class PopularMoviesFragment extends Fragment {
         mBinding.input.setOnEditorActionListener((view, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 doSearch(view);
-               return true;
+                return true;
             } else {
-               return false;
+                return false;
             }
         });
         mBinding.input.setOnKeyListener((view, keyCode, event) -> {

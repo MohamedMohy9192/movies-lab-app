@@ -78,16 +78,22 @@ public class PopularMoviesViewModel extends ViewModel {
     }
 
     public void loadNextPage() {
-        String q = query.getValue();
-        if (q != null) {
-            if (!q.isEmpty()) {
-                mNextPageHandler.queryNextPage(q);
+        String searchQuery = query.getValue();
+        if (searchQuery != null) {
+            if (!searchQuery.isEmpty()) {
+                mNextPageHandler.queryNextPage(searchQuery);
             }
         }
     }
 
+    public void refresh() {
+        if (query.getValue() != null) {
+            query.setValue(query.getValue());
+        }
+    }
+
     static class LoadMoreState {
-        private boolean isRunning;
+        private final boolean isRunning;
         @Nullable
         private final String errorMessage;
 
@@ -108,10 +114,6 @@ public class PopularMoviesViewModel extends ViewModel {
 
         public boolean isRunning() {
             return isRunning;
-        }
-
-        public void setRunning(boolean running) {
-            isRunning = running;
         }
 
         @Nullable
@@ -149,9 +151,13 @@ public class PopularMoviesViewModel extends ViewModel {
         }
 
         void queryNextPage(String query) {
+            Log.d(TAG, "queryNextPage: " + query);
+            Log.d(TAG, "queryNextPage: " + (this.query != null && this.query.equals(query)));
             if (this.query != null && this.query.equals(query)) {
+                Log.d(TAG, "queryNextPage: Return");
                 return;
             }
+            Log.d(TAG, "queryNextPage: Continuation");
             unregister();
             this.query = query;
             nextPageLiveData = mMovieRepository.searchNextPage(query);
