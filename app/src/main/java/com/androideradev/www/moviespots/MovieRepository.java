@@ -5,7 +5,6 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.Transformations;
 
 import com.androideradev.www.moviespots.data.DatabaseMovie;
@@ -13,8 +12,8 @@ import com.androideradev.www.moviespots.data.MovieLocaleDataSource;
 import com.androideradev.www.moviespots.network.NetworkMovie;
 import com.androideradev.www.moviespots.network.NetworkMovieContainer;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class MovieRepository {
 
@@ -55,14 +54,26 @@ public class MovieRepository {
         return fetchNextSearchPageTask.getLiveData();
     }
 
-    private LiveData<Resource<List<DatabaseMovie>>> searchMovies(String query) {
+    private LiveData<Resource<List<DatabaseMovie>>> searchMovies(String searchQuery) {
         return new NetworkBoundResource<List<DatabaseMovie>, NetworkMovieContainer>(mAppExecutors) {
             @Override
             protected void saveCallResult(@NonNull NetworkMovieContainer item) {
                 Log.d(TAG, "NetworkBoundResource: " + item.getMovies().size());
                 if (item.getMovies() != null) {
+                    List<Integer> movieIds = item.getMovies()
+                            .stream()
+                            .map(NetworkMovie::getId)
+                            .collect(Collectors.toList());
+
+                    MovieSearchResult movieSearchResult = new MovieSearchResult(searchQuery, movieIds,
+                            item.getNextPage(),
+                            item.getTotalPages(),
+                            item.getTotalResults());
+                    List<DatabaseMovie> databaseMovies =
+                            MovieMapper.toDatabaseMovies(item.getMovies());
+
                     Log.d(TAG, "Next Page: " + item.getNextPage());
-                    mLocaleDataSource.saveSearchMovieResult(query, item);
+                    mLocaleDataSource.saveSearchResult(movieSearchResult, databaseMovies);
                     for (NetworkMovie movie : item.getMovies()) {
                         Log.d("FetchNextSearchPageTask", "saveCallResult: " + movie.getId());
                     }
@@ -80,13 +91,13 @@ public class MovieRepository {
             @Override
             protected LiveData<List<DatabaseMovie>> loadFromDb() {
                 Log.d(TAG, "loadFromDb");
-                LiveData<List<DatabaseMovie>> listLiveData = mLocaleDataSource.searchMoviesDatabase(query);
+                LiveData<List<DatabaseMovie>> listLiveData = mLocaleDataSource.searchMoviesDatabase(searchQuery);
                 listLiveData.observeForever(movies -> {
                     Log.d("FetchNextSearchPageTask", "loadFromDb: get notified");
                     Log.d("FACE", "loadFromDb: " + String.valueOf(movies));
                     if (movies != null) {
                         for (DatabaseMovie movie : movies) {
-                              Log.d("FetchNextSearchPageTask", "loadFromDb: " + movie.getId());
+                            Log.d("FetchNextSearchPageTask", "loadFromDb: " + movie.getId());
                         }
                     }
                 });
@@ -97,7 +108,7 @@ public class MovieRepository {
             @Override
             protected LiveData<ApiResponse<NetworkMovieContainer>> createCall() {
                 Log.d(TAG, "createCall");
-                return mRemoteDataSource.searchMoviesApi(query);
+                return mRemoteDataSource.searchMoviesApi(searchQuery);
             }
         }.getAsLiveData();
     }

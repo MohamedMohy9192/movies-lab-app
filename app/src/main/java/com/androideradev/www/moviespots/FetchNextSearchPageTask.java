@@ -1,10 +1,9 @@
 package com.androideradev.www.moviespots;
 
-import android.util.Log;
-
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.androideradev.www.moviespots.data.DatabaseMovie;
 import com.androideradev.www.moviespots.data.MovieLocaleDataSource;
 import com.androideradev.www.moviespots.network.NetworkMovie;
 import com.androideradev.www.moviespots.network.NetworkMovieContainer;
@@ -73,7 +72,9 @@ public class FetchNextSearchPageTask implements Runnable {
                         ((ApiResponse.ApiSuccessResponse<NetworkMovieContainer>) apiResponse).getBody().getTotalPages(),
                         ((ApiResponse.ApiSuccessResponse<NetworkMovieContainer>) apiResponse).getBody().getTotalResults()
                 );
-                mLocaleDataSource.saveNextPageSearchMovie(merged, ((ApiResponse.ApiSuccessResponse<NetworkMovieContainer>) apiResponse).getBody().getMovies());
+
+                List<DatabaseMovie> databaseMovies = MovieMapper.toDatabaseMovies(((ApiResponse.ApiSuccessResponse<NetworkMovieContainer>) apiResponse).getBody().getMovies());
+                mLocaleDataSource.saveSearchResult(merged, databaseMovies);
 
                 newValue = Resource.success(((ApiResponse.ApiSuccessResponse<NetworkMovieContainer>) apiResponse).getBody().getNextPage() != null);
             } else if (apiResponse instanceof ApiResponse.ApiEmptyResponse) {

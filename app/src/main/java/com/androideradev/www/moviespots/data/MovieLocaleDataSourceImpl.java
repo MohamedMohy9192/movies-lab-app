@@ -7,16 +7,11 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Transformations;
 
 import com.androideradev.www.moviespots.AbsentLiveData;
-import com.androideradev.www.moviespots.MovieMapper;
 import com.androideradev.www.moviespots.MovieSearchResult;
-import com.androideradev.www.moviespots.network.NetworkMovie;
-import com.androideradev.www.moviespots.network.NetworkMovieContainer;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import kotlin.jvm.functions.Function1;
 
 public class MovieLocaleDataSourceImpl implements MovieLocaleDataSource {
 
@@ -62,16 +57,11 @@ public class MovieLocaleDataSourceImpl implements MovieLocaleDataSource {
     }
 
     @Override
-    public void saveSearchMovieResult(String searchQuery, NetworkMovieContainer item) {
-        List<Integer> movieIds = item.getMovies().stream().map(NetworkMovie::getId).collect(Collectors.toList());
-        MovieSearchResult movieSearchResult = new MovieSearchResult(searchQuery, movieIds,
-                item.getNextPage(), item.getTotalPages(), item.getTotalResults());
-
-        List<DatabaseMovie> databaseMovies = MovieMapper.toDatabaseMovies(item.getMovies());
+    public void saveSearchResult(MovieSearchResult movieSearchResult, List<DatabaseMovie> databaseMovies) {
 
         mMoviesDatabase.runInTransaction(() -> {
+            saveSearchMovieResult(movieSearchResult);
             saveMovies(databaseMovies);
-            mMovieDao.insertSearchMovieResult(movieSearchResult);
         });
     }
 
@@ -80,25 +70,22 @@ public class MovieLocaleDataSourceImpl implements MovieLocaleDataSource {
         return mMovieDao.findSearchResult(query);
     }
 
+
     @Override
-    public void saveNextPageSearchMovie(MovieSearchResult merged, List<NetworkMovie> movies) {
-        List<DatabaseMovie> databaseMovies = MovieMapper.toDatabaseMovies(movies);
-        mMoviesDatabase.runInTransaction(() -> {
-            mMovieDao.insertSearchMovieResult(merged);
-            mMovieDao.insertMovies(databaseMovies);
-        });
+    public void saveSearchMovieResult(MovieSearchResult movieSearchResult) {
+        mMovieDao.insertSearchMovieResult(movieSearchResult);
     }
 
     private LiveData<List<DatabaseMovie>> order(List<Integer> movieIds) {
         SparseIntArray order = new SparseIntArray();
 
-        for (int i = 0; i < movieIds.size(); i++) {
-            order.put(movieIds.get(i), i);
+        for (int index = 0; index < movieIds.size(); index++) {
+            order.put(movieIds.get(index), index);
         }
 
         return Transformations.map(mMovieDao.loadMoviesById(movieIds), movies -> {
-            return movies.stream().sorted(Comparator.comparingInt(value -> {
-                return order.get(value.getId());
+            return movies.stream().sorted(Comparator.comparingInt(databaseMovie -> {
+                return order.get(databaseMovie.getId());
             })).collect(Collectors.toList());
         });
     }
